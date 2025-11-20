@@ -1,16 +1,30 @@
+
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { localDB } from "@/api/localDB";
+
+import {
+  sessionAPI,
+  moduleAPI,
+  categoryAPI,
+} from "@/api/localDB";
+
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Clock, DollarSign, Edit, List } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+import {
+  BookOpen,
+  Clock,
+  Layers,
+  User,
+  ChevronRight,
+} from "lucide-react";
 
 export default function FormationDetailDialog({
   formation,
@@ -18,162 +32,197 @@ export default function FormationDetailDialog({
   onClose,
   onEdit,
 }) {
+  /* ---------------------- LOAD MODULES ---------------------- */
   const { data: modules = [] } = useQuery({
-    queryKey: ["formation-modules", formation?.id],
-    queryFn: () => localDB.module.filter({ formation_id: formation.id }),
-    enabled: !!formation?.id,
+    queryKey: ["modules"],
+    queryFn: () => moduleAPI.list(),
   });
 
-  if (!formation) return null;
+  /* ---------------------- LOAD SESSIONS ---------------------- */
+  const { data: sessions = [] } = useQuery({
+    queryKey: ["sessions"],
+    queryFn: () => sessionAPI.list(),
+  });
 
-  const getTypeColor = (type) => {
-    const colors = {
-      certifiante: "bg-blue-100 text-blue-800 border-blue-200",
-      diplomante: "bg-purple-100 text-purple-800 border-purple-200",
-      service: "bg-green-100 text-green-800 border-green-200",
-    };
-    return colors[type] || "bg-slate-100 text-slate-800";
-  };
+  /* ---------------------- CATEGORY NAME ---------------------- */
+  const { data: categories = [] } = useQuery({
+    queryKey: ["categories"],
+    queryFn: () => categoryAPI.list(),
+  });
 
-  const totalHours = modules.reduce(
-    (sum, mod) => sum + (mod.hours || 0),
+  const categoryName =
+    categories.find((c) => c.id === formation.category_id)?.name ||
+    "Sans catégorie";
+
+  /* ---------------------- MODULES BY FORMATION ---------------------- */
+  const formationModules = modules.filter(
+    (m) => m.formation_id === formation.id
+  );
+
+  const formationSessions = sessions.filter((s) =>
+    formationModules.map((m) => m.id).includes(s.module_id)
+  );
+
+  const totalHours = formationModules.reduce(
+    (sum, m) => sum + (m.hours || 0),
     0
   );
 
+  const typeColors = {
+    certifiante: "bg-blue-100 text-blue-800",
+    diplomante: "bg-purple-100 text-purple-800",
+    service: "bg-green-100 text-green-800",
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-2xl font-bold">
-              Détails de la Formation
-            </DialogTitle>
-            <Button onClick={onEdit} className="bg-red-600 hover:bg-red-700">
-              <Edit className="h-4 w-4 mr-2" />
-              Modifier
-            </Button>
-          </div>
+          <DialogTitle className="text-3xl font-bold">
+            Détails de la Formation
+          </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Image */}
-          {formation.image_url && (
+        {/* ---------------------- Header Banner ---------------------- */}
+        <div className="relative rounded-xl overflow-hidden mb-6">
+          {formation.image_url ? (
             <img
               src={formation.image_url}
               alt={formation.title}
-              className="w-full h-64 object-cover rounded-xl"
+              className="w-full h-52 object-cover"
             />
-          )}
-
-          {/* Header */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Badge
-                variant="outline"
-                className={`${getTypeColor(formation.type)} border`}
-              >
-                {formation.type}
-              </Badge>
+          ) : (
+            <div className="w-full h-52 bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center">
+              <BookOpen className="h-20 w-20 text-white opacity-40" />
             </div>
-
-            <h2 className="text-3xl font-bold text-slate-900 mb-2">
-              {formation.title}
-            </h2>
-            <p className="text-slate-600">{formation.description}</p>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-4">
-            <Card className="bg-red-50 border-red-200">
-              <CardContent className="p-4 text-center">
-                <DollarSign className="h-8 w-8 text-red-600 mx-auto mb-2" />
-                <p className="text-2xl font-bold text-red-800">
-                  {formation.price?.toLocaleString()} DH
-                </p>
-                <p className="text-sm text-red-700">Prix</p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-blue-50 border-blue-200">
-              <CardContent className="p-4 text-center">
-                <Clock className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                <p className="text-2xl font-bold text-blue-800">
-                  {formation.duration_months} mois
-                </p>
-                <p className="text-sm text-blue-700">Durée</p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-green-50 border-green-200">
-              <CardContent className="p-4 text-center">
-                <List className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                <p className="text-2xl font-bold text-green-800">
-                  {modules.length}
-                </p>
-                <p className="text-sm text-green-700">Modules</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Prérequis */}
-          {formation.prerequisites && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Prérequis</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-slate-600">
-                  {formation.prerequisites}
-                </p>
-              </CardContent>
-            </Card>
           )}
 
-          {/* Modules */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-red-600" />
-                Modules ({modules.length}) - {totalHours}h au total
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {modules.length === 0 ? (
-                <p className="text-center text-slate-500 py-8">
-                  Aucun module ajouté
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {modules.map((module, index) => (
-                    <div
-                      key={module.id}
-                      className="p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="flex items-center justify-center h-6 w-6 rounded-full bg-red-100 text-red-600 text-xs font-bold">
-                              {index + 1}
-                            </span>
-                            <h4 className="font-semibold text-slate-900">
-                              {module.title}
-                            </h4>
-                          </div>
-                          <p className="text-sm text-slate-600 ml-8">
-                            {module.description || "Aucune description"}
-                          </p>
-                        </div>
+          <div className="absolute top-4 left-4 flex items-center gap-2">
+            <Badge className={typeColors[formation.type] || "bg-slate-200"}>
+              {formation.type}
+            </Badge>
+            <Badge variant="outline">{categoryName}</Badge>
+          </div>
 
-                        <Badge variant="outline" className="ml-4">
-                          {module.hours}h
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
+          <Button
+            size="sm"
+            className="absolute top-4 right-4 bg-white shadow-md text-slate-900 hover:bg-slate-100"
+            onClick={onEdit}
+          >
+            Modifier
+          </Button>
+        </div>
+
+        {/* ---------------------- Title & Description ---------------------- */}
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">
+            {formation.title}
+          </h2>
+
+          <p className="text-slate-600 mt-2 whitespace-pre-line">
+            {formation.description || "Aucune description"}
+          </p>
+
+          {formation.prerequisites && (
+            <div className="mt-3 p-3 bg-slate-50 rounded-lg">
+              <p className="text-sm font-semibold text-slate-700">Prérequis :</p>
+              <p className="text-sm text-slate-600 whitespace-pre-line">
+                {formation.prerequisites}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* ---------------------- Stats ---------------------- */}
+        <div className="grid grid-cols-3 gap-4 mt-6">
+          <div className="p-4 bg-slate-50 rounded-lg text-center">
+            <p className="text-xs text-slate-500">Durée</p>
+            <p className="text-xl font-bold text-slate-900">
+              {formation.duration_months} mois
+            </p>
+          </div>
+
+          <div className="p-4 bg-slate-50 rounded-lg text-center">
+            <p className="text-xs text-slate-500">Modules</p>
+            <p className="text-xl font-bold text-slate-900">
+              {formationModules.length}
+            </p>
+          </div>
+
+          <div className="p-4 bg-slate-50 rounded-lg text-center">
+            <p className="text-xs text-slate-500">Total heures</p>
+            <p className="text-xl font-bold text-slate-900">
+              {totalHours} h
+            </p>
+          </div>
+        </div>
+
+        {/* ---------------------- Modules ---------------------- */}
+        <div className="mt-8">
+          <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
+            <Layers className="h-5 w-5" />
+            Modules
+          </h3>
+
+          {formationModules.length === 0 ? (
+            <p className="text-slate-500">Aucun module défini.</p>
+          ) : (
+            <div className="space-y-3">
+              {formationModules.map((mod) => (
+                <div
+                  key={mod.id}
+                  className="p-3 bg-slate-50 rounded-lg flex justify-between items-center"
+                >
+                  <div>
+                    <p className="font-semibold">{mod.title}</p>
+                    <p className="text-sm text-slate-500">
+                      {mod.hours} heures
+                    </p>
+                  </div>
+
+                  <ChevronRight className="h-4 w-4 text-slate-400" />
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ---------------------- Sessions ---------------------- */}
+        <div className="mt-8">
+          <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
+            <User className="h-5 w-5" />
+            Sessions
+          </h3>
+
+          {formationSessions.length === 0 ? (
+            <p className="text-slate-500">Aucune session planifiée.</p>
+          ) : (
+            <div className="space-y-3">
+              {formationSessions.map((s) => (
+                <div
+                  key={s.id}
+                  className="p-3 bg-slate-50 rounded-lg flex justify-between items-center"
+                >
+                  <div>
+                    <p className="font-semibold">{s.room}</p>
+                    <p className="text-sm text-slate-500">
+                      {s.start_date} → {s.end_date}
+                    </p>
+                  </div>
+
+                  <Badge variant="outline">{s.status}</Badge>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ---------------------- PRICE ---------------------- */}
+        <div className="mt-10 p-5 bg-red-50 rounded-xl">
+          <p className="text-sm text-slate-500">Tarif</p>
+          <p className="text-3xl font-black text-red-700">
+            {formation.price?.toLocaleString()} Ar
+          </p>
         </div>
       </DialogContent>
     </Dialog>

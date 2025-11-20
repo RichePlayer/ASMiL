@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -10,40 +11,43 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
-
 import {
   Plus,
   Search,
   BookOpen,
   Edit,
   Trash2,
-  Clock,
+  Eye,
   TrendingUp,
   Users,
+  Clock
 } from "lucide-react";
 
-import FormationFormDialog from "@/components/formations/FormationFormDialog";
-import FormationDetailDialog from "@/components/formations/FormationDetailDialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+
+import FormationFormDialog from "../components/formations/FormationFormDialog";
+import FormationDetailDialog from "../components/formations/FormationDetailDialog";
+
+import { toast } from "sonner";
 
 export default function Formations() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [showForm, setShowForm] = useState(false);
-  const [editingFormation, setEditingFormation] = useState(null);
-  const [viewingFormation, setViewingFormation] = useState(null);
   const [selectedType, setSelectedType] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("all");
 
+  const [showForm, setShowForm] = useState(false);
+  const [editingFormation, setEditingFormation] = useState(null);
+  const [viewingFormation, setViewingFormation] = useState(null);
+
   const queryClient = useQueryClient();
 
-  // -------------------------
-  // LOAD DATA
-  // -------------------------
+  /* ---------------------------------------------
+    LOAD DATA FROM LOCALDB
+  ---------------------------------------------- */
   const { data: formations = [], isLoading } = useQuery({
     queryKey: ["formations"],
-    queryFn: () => formationAPI.list(),
+    queryFn: () => formationAPI.list("-created_date", 500),
   });
 
   const { data: categories = [] } = useQuery({
@@ -61,53 +65,43 @@ export default function Formations() {
     queryFn: () => sessionAPI.list(),
   });
 
-  // -------------------------
-  // DELETE FORMATION
-  // -------------------------
+  /* ---------------------------------------------
+    DELETE FORMATION
+  ---------------------------------------------- */
   const deleteFormationMutation = useMutation({
     mutationFn: (id) => formationAPI.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["formations"] });
-      toast.success("Formation supprimée avec succès");
+      toast.success("Formation supprimée");
     },
   });
 
-  // -------------------------
-  // FILTERED LIST
-  // -------------------------
-  const filteredFormations = formations.filter((formation) => {
-    const matchesSearch = formation.title
-      ?.toLowerCase()
-      .includes(searchQuery.toLowerCase());
+  /* ---------------------------------------------
+    HELPERS
+  ---------------------------------------------- */
 
-    const matchesType =
-      selectedType === "all" || formation.type === selectedType;
-
+  const filteredFormations = formations.filter((f) => {
+    const matchesSearch = f.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesType = selectedType === "all" || selectedType === f.type;
     const matchesCategory =
-      selectedCategory === "all" || formation.category_id === selectedCategory;
+      selectedCategory === "all" || selectedCategory === f.category_id;
 
     return matchesSearch && matchesType && matchesCategory;
   });
 
-  const getFormationModules = (formationId) =>
+  const getModulesByFormation = (formationId) =>
     modules.filter((m) => m.formation_id === formationId);
 
-  const getFormationSessions = (formationId) => {
-    const modIds = modules
+  const getSessionsByFormation = (formationId) => {
+    const moduleIds = modules
       .filter((m) => m.formation_id === formationId)
       .map((m) => m.id);
-    return sessions.filter((s) => modIds.includes(s.module_id));
+
+    return sessions.filter((s) => moduleIds.includes(s.module_id));
   };
 
-  // -------------------------
-  // STATS
-  // -------------------------
-  const stats = {
-    total: formations.length,
-    certifiantes: formations.filter((f) => f.type === "certifiante").length,
-    diplomantes: formations.filter((f) => f.type === "diplomante").length,
-    services: formations.filter((f) => f.type === "service").length,
-  };
+  const getCategoryName = (categoryId) =>
+    categories.find((c) => c.id === categoryId)?.name || "Sans catégorie";
 
   const getTypeColor = (type) => {
     const colors = {
@@ -118,22 +112,26 @@ export default function Formations() {
     return colors[type] || "bg-slate-100 text-slate-800";
   };
 
-  const getCategoryName = (categoryId) => {
-    return categories.find((c) => c.id === categoryId)?.name || "Sans catégorie";
+  /* ---------------------------------------------
+    STATS
+  ---------------------------------------------- */
+  const stats = {
+    total: formations.length,
+    certifiantes: formations.filter((f) => f.type === "certifiante").length,
+    diplomantes: formations.filter((f) => f.type === "diplomante").length,
+    services: formations.filter((f) => f.type === "service").length,
   };
 
-  // ------------------------------------------------
-  // RENDER PAGE
-  // ------------------------------------------------
+  /* ---------------------------------------------
+    RENDER
+  ---------------------------------------------- */
   return (
     <div className="space-y-6">
       {/* HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-black text-slate-900">Formations</h1>
-          <p className="text-slate-600 mt-1">
-            Gérez votre catalogue de formations
-          </p>
+          <p className="text-slate-600">Gérez votre catalogue</p>
         </div>
 
         <Button
@@ -141,7 +139,7 @@ export default function Formations() {
             setEditingFormation(null);
             setShowForm(true);
           }}
-          className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
+          className="bg-red-600 hover:bg-red-700 text-white"
         >
           <Plus className="h-4 w-4 mr-2" />
           Nouvelle Formation
@@ -149,48 +147,42 @@ export default function Formations() {
       </div>
 
       {/* STATS */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card className="shadow bg-red-50 border-red-200">
-          <CardContent className="p-6 flex items-center justify-between">
+      <div className="grid md:grid-cols-4 gap-4">
+        <Card className="bg-red-50 border-0 shadow">
+          <CardContent className="p-5 flex justify-between">
             <div>
               <p className="text-sm text-red-700">Total</p>
-              <h3 className="text-3xl font-bold text-red-900">{stats.total}</h3>
+              <p className="text-3xl font-bold">{stats.total}</p>
             </div>
             <BookOpen className="h-10 w-10 text-red-600" />
           </CardContent>
         </Card>
 
-        <Card className="shadow bg-blue-50 border-blue-200">
-          <CardContent className="p-6 flex items-center justify-between">
+        <Card className="bg-blue-50 border-0 shadow">
+          <CardContent className="p-5 flex justify-between">
             <div>
               <p className="text-sm text-blue-700">Certifiantes</p>
-              <h3 className="text-3xl font-bold text-blue-900">
-                {stats.certifiantes}
-              </h3>
+              <p className="text-3xl font-bold">{stats.certifiantes}</p>
             </div>
             <TrendingUp className="h-10 w-10 text-blue-600" />
           </CardContent>
         </Card>
 
-        <Card className="shadow bg-purple-50 border-purple-200">
-          <CardContent className="p-6 flex items-center justify-between">
+        <Card className="bg-purple-50 border-0 shadow">
+          <CardContent className="p-5 flex justify-between">
             <div>
               <p className="text-sm text-purple-700">Diplômantes</p>
-              <h3 className="text-3xl font-bold text-purple-900">
-                {stats.diplomantes}
-              </h3>
+              <p className="text-3xl font-bold">{stats.diplomantes}</p>
             </div>
             <Users className="h-10 w-10 text-purple-600" />
           </CardContent>
         </Card>
 
-        <Card className="shadow bg-green-50 border-green-200">
-          <CardContent className="p-6 flex items-center justify-between">
+        <Card className="bg-green-50 border-0 shadow">
+          <CardContent className="p-5 flex justify-between">
             <div>
               <p className="text-sm text-green-700">Services</p>
-              <h3 className="text-3xl font-bold text-green-900">
-                {stats.services}
-              </h3>
+              <p className="text-3xl font-bold">{stats.services}</p>
             </div>
             <Clock className="h-10 w-10 text-green-600" />
           </CardContent>
@@ -198,9 +190,9 @@ export default function Formations() {
       </div>
 
       {/* SEARCH + FILTERS */}
-      <div className="flex flex-col lg:flex-row gap-4">
+      <div className="flex flex-wrap gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Search className="absolute left-3 top-3 text-slate-400 h-4 w-4" />
           <Input
             placeholder="Rechercher une formation..."
             value={searchQuery}
@@ -209,78 +201,76 @@ export default function Formations() {
           />
         </div>
 
-        <div className="flex gap-2 flex-wrap">
-          <select
-            value={selectedType}
-            onChange={(e) => setSelectedType(e.target.value)}
-            className="px-4 py-2 rounded-lg border border-slate-300"
-          >
-            <option value="all">Tous types</option>
-            <option value="certifiante">Certifiante</option>
-            <option value="diplomante">Diplômante</option>
-            <option value="service">Service</option>
-          </select>
+        <select
+          value={selectedType}
+          onChange={(e) => setSelectedType(e.target.value)}
+          className="border p-2 rounded-lg"
+        >
+          <option value="all">Tous types</option>
+          <option value="certifiante">Certifiante</option>
+          <option value="diplomante">Diplômante</option>
+          <option value="service">Service</option>
+        </select>
 
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-4 py-2 rounded-lg border border-slate-300"
-          >
-            <option value="all">Toutes catégories</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        <select
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+          className="border p-2 rounded-lg"
+        >
+          <option value="all">Toutes catégories</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
       </div>
 
-      {/* LIST CONTENT */}
+      {/* LIST */}
       {isLoading ? (
-        <p className="text-center py-10 text-slate-500">Chargement...</p>
+        <p className="text-center py-10 text-slate-500">Chargement…</p>
       ) : filteredFormations.length === 0 ? (
-        <Card className="p-10 text-center">
-          <BookOpen className="h-14 w-14 text-red-600 mx-auto mb-4" />
-          <h3 className="text-xl font-bold">Aucune formation trouvée</h3>
+        <Card className="p-10 text-center shadow">
+          <BookOpen className="h-14 w-14 mx-auto text-red-600 opacity-60" />
+          <p className="text-slate-600 mt-2">Aucune formation trouvée</p>
         </Card>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredFormations.map((formation) => {
-            const formationModules = getFormationModules(formation.id);
-            const formationSessions = getFormationSessions(formation.id);
+            const formationModules = getModulesByFormation(formation.id);
+            const formationSessions = getSessionsByFormation(formation.id);
             const totalHours = formationModules.reduce(
-              (s, m) => s + (m.hours || 0),
+              (sum, mod) => sum + (mod.hours || 0),
               0
             );
 
             return (
               <Card
                 key={formation.id}
-                className="hover:shadow-xl transition cursor-pointer"
+                className="shadow-lg hover:-translate-y-1 transition cursor-pointer"
                 onClick={() => setViewingFormation(formation)}
               >
                 {formation.image_url ? (
                   <img
                     src={formation.image_url}
-                    className="w-full h-48 object-cover"
+                    className="h-44 w-full object-cover rounded-t-lg"
                   />
                 ) : (
-                  <div className="h-48 bg-red-600 flex items-center justify-center">
-                    <BookOpen className="h-16 w-16 text-white opacity-80" />
+                  <div className="h-44 bg-red-600 flex items-center justify-center text-white">
+                    <BookOpen className="h-14 w-14 opacity-70" />
                   </div>
                 )}
 
                 <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <CardTitle className="text-xl">
-                      {formation.title}
-                    </CardTitle>
+                  <div className="flex justify-between">
+                    <Badge className={`${getTypeColor(formation.type)}`}>
+                      {formation.type}
+                    </Badge>
 
                     <div className="flex gap-2">
                       <Button
                         size="icon"
-                        variant="secondary"
+                        variant="ghost"
                         onClick={(e) => {
                           e.stopPropagation();
                           setEditingFormation(formation);
@@ -292,7 +282,8 @@ export default function Formations() {
 
                       <Button
                         size="icon"
-                        variant="secondary"
+                        variant="ghost"
+                        className="text-red-600"
                         onClick={(e) => {
                           e.stopPropagation();
                           if (confirm("Supprimer cette formation ?")) {
@@ -300,48 +291,51 @@ export default function Formations() {
                           }
                         }}
                       >
-                        <Trash2 className="h-4 w-4 text-red-600" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
 
-                  <p className="text-sm text-slate-600">
+                  <CardTitle className="line-clamp-2">
+                    {formation.title}
+                  </CardTitle>
+                  <p className="text-sm text-slate-500">
                     {getCategoryName(formation.category_id)}
                   </p>
                 </CardHeader>
 
-                <CardContent>
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    <div className="p-2 bg-slate-50 rounded">
-                      <p className="text-xs">Durée</p>
-                      <p className="font-bold">
-                        {formation.duration_months} mois
-                      </p>
-                    </div>
+                <CardContent className="space-y-4">
+                  <p className="text-sm text-slate-600 line-clamp-2">
+                    {formation.description}
+                  </p>
 
-                    <div className="p-2 bg-slate-50 rounded">
-                      <p className="text-xs">Modules</p>
+                  <div className="grid grid-cols-3 text-center text-sm">
+                    <div>
+                      <p className="text-slate-500">Durée</p>
+                      <p className="font-bold">{formation.duration_months} mois</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500">Modules</p>
                       <p className="font-bold">{formationModules.length}</p>
                     </div>
-
-                    <div className="p-2 bg-slate-50 rounded">
-                      <p className="text-xs">Sessions</p>
+                    <div>
+                      <p className="text-slate-500">Sessions</p>
                       <p className="font-bold">{formationSessions.length}</p>
                     </div>
                   </div>
 
                   {totalHours > 0 && (
-                    <p className="text-sm flex items-center gap-1 mt-3">
+                    <div className="flex items-center gap-2 text-sm text-slate-600">
                       <Clock className="h-4 w-4" />
-                      {totalHours}h au total
-                    </p>
+                      {totalHours} h total
+                    </div>
                   )}
 
-                  <div className="border-t pt-3 mt-3">
-                    <p className="text-sm">Tarif</p>
-                    <p className="text-2xl font-bold text-red-700">
-                      {formation.price?.toLocaleString()} Ar
-                    </p>
+                  <div className="pt-3 border-t flex justify-between">
+                    <span className="text-sm text-slate-500">Tarif</span>
+                    <span className="text-xl font-bold text-red-600">
+                      {formation.price.toLocaleString()} Ar
+                    </span>
                   </div>
                 </CardContent>
               </Card>
@@ -350,7 +344,7 @@ export default function Formations() {
         </div>
       )}
 
-      {/* DIALOGS */}
+      {/* FORM DIALOG */}
       {showForm && (
         <FormationFormDialog
           formation={editingFormation}
@@ -363,11 +357,12 @@ export default function Formations() {
         />
       )}
 
+      {/* DETAIL DIALOG */}
       {viewingFormation && (
         <FormationDetailDialog
           formation={viewingFormation}
           categories={categories}
-          open={!!viewingFormation}
+          open={true}
           onClose={() => setViewingFormation(null)}
           onEdit={() => {
             setEditingFormation(viewingFormation);

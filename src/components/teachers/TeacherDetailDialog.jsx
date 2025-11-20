@@ -36,10 +36,6 @@ export default function TeacherDetailDialog({ teacher, open, onClose, onEdit }) 
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="text-2xl font-bold">Profil Enseignant</DialogTitle>
-            <Button onClick={onEdit} className="bg-red-600 hover:bg-red-700">
-              <Edit className="h-4 w-4 mr-2" />
-              Modifier
-            </Button>
           </div>
         </DialogHeader>
 
