@@ -127,7 +127,6 @@ export default function StudentDetailDialog({
               <TabsTrigger value="info">Informations</TabsTrigger>
               <TabsTrigger value="enrollments">Inscriptions</TabsTrigger>
               <TabsTrigger value="payments">Paiements</TabsTrigger>
-              <TabsTrigger value="documents">Documents</TabsTrigger>
             </TabsList>
 
             {/* INFORMATIONS PERSONNELLES */}
@@ -338,23 +337,6 @@ export default function StudentDetailDialog({
                       ))}
                     </div>
                   )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* DOCUMENTS */}
-            <TabsContent value="documents">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-red-600" />
-                    Documents
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-center text-slate-500 py-8">
-                    Fonctionnalité de gestion des documents à venir
-                  </p>
                 </CardContent>
               </Card>
             </TabsContent>

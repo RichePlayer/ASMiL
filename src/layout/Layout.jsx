@@ -13,6 +13,7 @@ import {
   BarChart3,
   User,
   LogOut,
+  Award,
   Settings,
   Menu,
   X
@@ -27,12 +28,13 @@ const menuItems = [
   { name: "Formations", icon: BookOpen, path: "/formations" },
   { name: "Modules", icon: FileText, path: "/modules" },
   { name: "Sessions", icon: Calendar, path: "/sessions" },
+  { name: "Emploi du Temps", icon: Calendar, path: "Timetable" },
   { name: "Inscriptions", icon: ClipboardCheck, path: "/enrollments" },
   { name: "Présences", icon: ClipboardCheck, path: "/attendance" },
   { name: "Notes", icon: FileText, path: "/grades" },
-  { name: "Facturation", icon: CreditCard, path: "/invoices" },
+  { name: "Paiements", icon: CreditCard, path: "/invoices" },
+  { name: "Certificates", icon: Award, path: "/certificates" },
   { name: "Annonces", icon: Bell, path: "/announcements" },
-  { name: "Rapports", icon: BarChart3, path: "/reports" },
 ];
 
 export default function Layout({ children }) {
@@ -40,8 +42,8 @@ export default function Layout({ children }) {
   const location = useLocation();
 
   const user = {
-    full_name: "Admin User",
-    role: "admin",
+    full_name: "Utilisateur",
+    role: "secretaire",
   };
 
   return (
@@ -119,7 +121,7 @@ export default function Layout({ children }) {
         <button onClick={() => setSidebarOpen(true)}>
           <Menu className="h-6 w-6 text-slate-600" />
         </button>
-        <img src="/logo.png" alt="ASMiL Logo" className="h-12" />
+        <img src="/logo.jpg" alt="ASMiL Logo" className="h-12" />
       </div>
 
       {/* ============================ */}

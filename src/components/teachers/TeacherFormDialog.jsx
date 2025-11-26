@@ -155,7 +155,7 @@ export default function TeacherFormDialog({ teacher, open, onClose }) {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Prénom *</Label>
+              <Label>Prénom :</Label>
               <Input
                 value={formData.first_name}
                 onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
@@ -164,7 +164,7 @@ export default function TeacherFormDialog({ teacher, open, onClose }) {
             </div>
 
             <div>
-              <Label>Nom *</Label>
+              <Label>Nom :</Label>
               <Input
                 value={formData.last_name}
                 onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
@@ -173,7 +173,7 @@ export default function TeacherFormDialog({ teacher, open, onClose }) {
             </div>
 
             <div>
-              <Label>Email *</Label>
+              <Label>Email :</Label>
               <Input
                 type="email"
                 value={formData.email}
@@ -183,7 +183,7 @@ export default function TeacherFormDialog({ teacher, open, onClose }) {
             </div>
 
             <div>
-              <Label>Téléphone</Label>
+              <Label>Téléphone :</Label>
               <Input
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -191,7 +191,7 @@ export default function TeacherFormDialog({ teacher, open, onClose }) {
             </div>
 
             <div>
-              <Label>N° Identification</Label>
+              <Label>N° Identification :</Label>
               <Input
                 value={formData.registration_number}
                 onChange={(e) => setFormData({ ...formData, registration_number: e.target.value })}
@@ -199,7 +199,7 @@ export default function TeacherFormDialog({ teacher, open, onClose }) {
             </div>
 
             <div>
-              <Label>Date d'Embauche</Label>
+              <Label>Date d'Embauche :</Label>
               <Input
                 type="date"
                 value={formData.hire_date}
@@ -208,7 +208,7 @@ export default function TeacherFormDialog({ teacher, open, onClose }) {
             </div>
 
             <div>
-              <Label>Tarif Horaire (Ar)</Label>
+              <Label>Tarif Horaire (Ar) :</Label>
               <Input
                 type="number"
                 min="0"
@@ -218,7 +218,7 @@ export default function TeacherFormDialog({ teacher, open, onClose }) {
             </div>
 
             <div>
-              <Label>Statut</Label>
+              <Label>Statut :</Label>
               <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
                 <SelectTrigger>
                   <SelectValue />
@@ -234,7 +234,7 @@ export default function TeacherFormDialog({ teacher, open, onClose }) {
 
           {/* Bio */}
           <div>
-            <Label>Biographie</Label>
+            <Label>Biographie :</Label>
             <Textarea
               value={formData.bio}
               onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
@@ -244,7 +244,7 @@ export default function TeacherFormDialog({ teacher, open, onClose }) {
 
           {/* Specialties */}
           <div>
-            <Label>Spécialités</Label>
+            <Label>Spécialités :</Label>
             <div className="flex gap-2 mb-2">
               <Input
                 value={newSpecialty}
@@ -271,7 +271,7 @@ export default function TeacherFormDialog({ teacher, open, onClose }) {
           {/* Availability */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <Label>Disponibilités</Label>
+              <Label>Disponibilités :</Label>
               <Button type="button" size="sm" variant="outline" onClick={addAvailability}>
                 <Plus className="h-4 w-4 mr-1" />
                 Ajouter

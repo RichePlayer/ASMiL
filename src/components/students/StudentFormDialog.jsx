@@ -137,7 +137,7 @@ export default function StudentFormDialog({ student, open, onClose }) {
           {/* Form Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label>N° Inscription *</Label>
+              <Label>N° Inscription :</Label>
               <Input
                 value={formData.registration_number}
                 onChange={(e) =>
@@ -149,7 +149,7 @@ export default function StudentFormDialog({ student, open, onClose }) {
             </div>
 
             <div>
-              <Label>Date d'Inscription *</Label>
+              <Label>Date d'Inscription :</Label>
               <Input
                 type="date"
                 value={formData.enrollment_date}
@@ -161,7 +161,7 @@ export default function StudentFormDialog({ student, open, onClose }) {
             </div>
 
             <div>
-              <Label>Prénom *</Label>
+              <Label>Prénom :</Label>
               <Input
                 value={formData.first_name}
                 onChange={(e) =>
@@ -172,7 +172,7 @@ export default function StudentFormDialog({ student, open, onClose }) {
             </div>
 
             <div>
-              <Label>Nom *</Label>
+              <Label>Nom :</Label>
               <Input
                 value={formData.last_name}
                 onChange={(e) =>
@@ -183,7 +183,7 @@ export default function StudentFormDialog({ student, open, onClose }) {
             </div>
 
             <div>
-              <Label>Date de Naissance *</Label>
+              <Label>Date de Naissance :</Label>
               <Input
                 type="date"
                 value={formData.date_of_birth}
@@ -195,7 +195,7 @@ export default function StudentFormDialog({ student, open, onClose }) {
             </div>
 
             <div>
-              <Label>Genre</Label>
+              <Label>Genre :</Label>
               <Select
                 value={formData.gender}
                 onValueChange={(value) =>
@@ -213,7 +213,7 @@ export default function StudentFormDialog({ student, open, onClose }) {
             </div>
 
             <div>
-              <Label>Email</Label>
+              <Label>Email :</Label>
               <Input
                 type="email"
                 value={formData.email}
@@ -225,18 +225,18 @@ export default function StudentFormDialog({ student, open, onClose }) {
             </div>
 
             <div>
-              <Label>Téléphone Parent/Tuteur</Label>
+              <Label>N° Téléphone :</Label>
               <Input
                 value={formData.phone_parent}
                 onChange={(e) =>
                   setFormData({ ...formData, phone_parent: e.target.value })
                 }
-                placeholder="+212 6XX XXX XXX"
+                placeholder="+261 XX XXX XXX"
               />
             </div>
 
             <div className="md:col-span-2">
-              <Label>Adresse</Label>
+              <Label>Adresse :</Label>
               <Textarea
                 value={formData.address}
                 onChange={(e) =>
@@ -248,7 +248,7 @@ export default function StudentFormDialog({ student, open, onClose }) {
             </div>
 
             <div>
-              <Label>Statut</Label>
+              <Label>Statut :</Label>
               <Select
                 value={formData.status}
                 onValueChange={(value) =>
